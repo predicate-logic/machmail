@@ -1,0 +1,45 @@
+{
+    "version": 1,
+    "disable_existing_loggers": false,
+    "formatters": {
+        "simple": {
+            "format": "%(asctime)s %(levelname)7s %(message)s"
+        },
+        "full": {
+            "format": "%(asctime)s %(levelname)7s %(module)s.%(funcName)s[%(lineno)4s] %(message)s"
+        }
+    },
+
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "level": "DEBUG",
+            "formatter": "simple",
+            "stream": "ext://sys.stderr"
+        },
+
+        "file_handler": {
+            "class": "machmail.util.multiprocessing_log.MultiProcessingLog",
+            "formatter": "full",
+            "name": "../log/machmail.log",
+            "maxsize": 20971520,
+            "mode": "a",
+            "rotate": 1,
+            "level": "DEBUG"
+        }
+    },
+
+    "loggers": {
+        "default": {
+            "level": "DEBUG",
+            "handlers": ["console"],
+            # "handlers": ["console", "file_handler"],
+            "propagate": false
+        }
+    },
+
+    "root": {
+        "level": "DEBUG",
+        "handlers": ["console", "file_handler"]
+    }
+}
