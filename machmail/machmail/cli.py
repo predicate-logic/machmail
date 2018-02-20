@@ -185,17 +185,21 @@ def filter_email(user_id, query, just_ids):
                                             q=query).execute()
 
     log.warn("Response:")
-    if just_ids:
-        for id in [x['id'] for x in response['messages']]:
-            print(id)
+    if response['resultSizeEstimate'] == 0:
+        log.warn("No results found.")
     else:
-        print(response)
+        if just_ids:
+            for id in [x['id'] for x in response['messages']]:
+                print(id)
+        else:
+            print(response)
 
 
 @cli.command("get-email")
 @click.argument("user-id")
 @click.argument("msg-id")
-def get_email(user_id, msg_id):
+@click.option('--mark-as-read', is_flag=True, default=True, help="Mark email as read if attachement is downloaded.")
+def get_email(user_id, msg_id, mark_as_read):
     """Print out the body of an email.  Indicate if it has attachements.
     """
     try:
@@ -206,15 +210,24 @@ def get_email(user_id, msg_id):
         log.warn("Response:")
         print(json.dumps(response, indent=4, sort_keys=True))
 
+        if mark_as_read:
+            log.warn("Marking message: {} as read.".format(msg_id))
+            response = service.users().messages().modify(userId=user_id, id=msg_id, body={'removeLabelIds': ["UNREAD"]}).execute()
+        else:
+            log.warn("Marking message: {} as UNREAD.".format(msg_id))
+            response = service.users().messages().modify(userId=user_id, id=msg_id, body={'addLabelIds': ["UNREAD"]}).execute()
+            
     except Exception as e:
         log.exception(e)
         sys.exit(-1)
+
 
 @cli.command("get-attachments")
 @click.argument("user-id")
 @click.argument("msg-id")
 @click.argument("store-dir")
-def get_attachments(user_id, msg_id, store_dir):
+@click.option('--mark-as-read', is_flag=True, default=True, help="Mark email as read if attachement is downloaded.")
+def get_attachments(user_id, msg_id, store_dir, mark_as_read):
     """Get and store attachment for message
     """
 
@@ -235,6 +248,11 @@ def get_attachments(user_id, msg_id, store_dir):
                 with open(path, 'wb') as f:
                     log.warn('Wrote: {}'.format(path))
                     f.write(file_data)
+
+        # mark message as read
+        if mark_as_read:
+            log.warn("Marking message: {} as read.".format(msg_id))
+            response = service.users().messages().modify(userId=user_id, id=msg_id, body={'removeLabelIds': ["UNREAD"]}).execute()
 
     except Exception as e:
         log.exception(e)

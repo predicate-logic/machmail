@@ -72,29 +72,31 @@ python -m machmail.cli filter-email --help
 For example:
 
    * Sent-to `mfwilson@gmail.com`
-   * Find all messages that have an attachement that were created in the past 2 days.
+   * Find all messages that have an attachement that were created in the past 2 days and are unread.
    * Only output the message id's.
 
 ```
 cd machmail/machmail
 python -m machmail.cli filter-email mfwilson@gmail.com --just-ids \
---query "has:attachment newer_than:2d"
+--query "has:attachment newer_than:2d label:UNREAD"
 ```
 
 If the command throws an error message check that the `--query` parameters are valid.  You can test them online [GMail API Reference](https://developers.google.com/gmail/api/v1/reference/).
 
 ### Retrieve Attachments
+
 For example:
 
    * Find all attachements and store them in `/tmp/`
    * From `mfwilson@gmail.com`
    * Subject: Test Filter Text
 
+
 First find all of the `msg_id`s that match this query using `filter-email`:
 
 ```
 python -m machmail.cli filter-email mfwilson@gmail.com --just-ids \
---query "has:attachment newer_than:2d subject:Test Filter Text"
+--query "has:attachment newer_than:2d subject:Test Filter Text label:UNREAD"
 
 2018-02-19 17:46:58,281 WARNING Response:
 161afe491f18b00c
@@ -112,10 +114,13 @@ python -m machmail.cli get-attachments mfwilson@gmail.com 161afe491f18b00c /tmp/
 
 Looks like there were two attachements on this message.  They have now ben stored in `/tmp/` and can be further processed.
 
+**NOTE**: Reteiving a message's attachement(s) with `machmail` will mark it as "read", making it easier to filter it out with subsequent `filter-email` calls.
+
+
 You could perform both searches together if you would like:
 
 ```
-for msg_id in $(python -m machmail.cli filter-email mfwilson@gmail.com --just-ids --query "has:attachment newer_than:2d subject:Test Filter Text"); do 
+for msg_id in $(python -m machmail.cli filter-email mfwilson@gmail.com --just-ids --query "has:attachment newer_than:2d subject:Test Filter Text label:UNREAD"); do 
 	python -m machmail.cli get-attachments mfwilson@gmail.com $msg_id /tmp/; 
 done
 
@@ -124,8 +129,10 @@ done
 ### Examine Email
 You can additionally examine the data for a particular email using this utility as well.  This is less common but could be useful for debugging.
 
+**NOTE**: example below also sets the email message back to `UNREAD`.  This could be useful to backfill data that had been previously seen.
+
 ```
-python -m machmail.cli get-email mfwilson@gmail.com 161afe491f18b00c
+python -m machmail.cli get-email --mark-as-unread mfwilson@gmail.com 161afe491f18b00c
 
 2018-02-19 17:56:10,951 WARNING Response:
 {
