@@ -198,8 +198,8 @@ def filter_email(user_id, query, just_ids):
 @cli.command("get-email")
 @click.argument("user-id")
 @click.argument("msg-id")
-@click.option('--mark-as-read', is_flag=True, default=True, help="Mark email as read if attachement is downloaded.")
-def get_email(user_id, msg_id, mark_as_read):
+@click.option('--mark-as-unread', is_flag=True, default=True, help="Mark email as unread.")
+def get_email(user_id, msg_id, mark_as_unread):
     """Print out the body of an email.  Indicate if it has attachements.
     """
     try:
@@ -210,7 +210,7 @@ def get_email(user_id, msg_id, mark_as_read):
         log.warn("Response:")
         print(json.dumps(response, indent=4, sort_keys=True))
 
-        if mark_as_read:
+        if mark_as_unread:
             log.warn("Marking message: {} as read.".format(msg_id))
             response = service.users().messages().modify(userId=user_id, id=msg_id, body={'removeLabelIds': ["UNREAD"]}).execute()
         else:

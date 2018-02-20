@@ -72,7 +72,7 @@ python -m machmail.cli filter-email --help
 For example:
 
    * Sent-to `mfwilson@gmail.com`
-   * Find all messages that have an attachement that were created in the past 2 days and are unread.
+   * Find all messages that have an attachement that were created in the past 2 days and are UNREAD.
    * Only output the message id's.
 
 ```
@@ -132,7 +132,7 @@ You can additionally examine the data for a particular email using this utility 
 **NOTE**: example below also sets the email message back to `UNREAD`.  This could be useful to backfill data that had been previously seen.
 
 ```
-python -m machmail.cli get-email --mark-as-unread mfwilson@gmail.com 161afe491f18b00c
+python -m machmail.cli get-email --mark-as-read mfwilson@gmail.com 161afe491f18b00c
 
 2018-02-19 17:56:10,951 WARNING Response:
 {
