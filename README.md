@@ -2,6 +2,11 @@
 Python attachment client for Machinima 
 
 ## Setup
+
+### Checkout Code
+`machmail` utility is located [here](
+```
+
 Follow instructions at [Gmail API Quickstart](https://developers.google.com/gmail/api/quickstart/python)
 
 Save `client_secret.json` somewhere safe.  Absolute path to this file will be given during run of utility.

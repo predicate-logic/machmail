@@ -7,7 +7,9 @@
 # stock libs
 import os
 import sys
+import json
 import click
+import base64
 import logging
 import httplib2
 import multiprocessing
@@ -23,7 +25,7 @@ from oauth2client.file import Storage
 from machmail import settings
 from machmail import __version__
 from machmail.util.log import setup_logging
-
+# from machmail.util.mutex import create_mutex_file
 
 
 setup_logging()
@@ -42,8 +44,6 @@ class State(object):
     def __init__(self):
         self.verbose = 0
         self.quiet = False
-        self.force_run = False
-        self.profile = None
 
 
 pass_state = click.make_pass_decorator(State, ensure=True)
@@ -67,8 +67,8 @@ def verbose_option(f):
         return value
 
     return click.option('-v', '--verbose', count=True, default=0,
-                        expose_value=False, help='Turn on verbose logging.',
-                        callback=callback)(f)
+                     expose_value=False, help='Turn on verbose logging.',
+                     callback=callback)(f)
 
 
 # Quiet all output except for errors and output data.
@@ -83,9 +83,9 @@ def quiet_option(f):
         return value
 
     return click.option('-q', '--quiet', is_flag=True,
-                        expose_value=False,
-                        help='Only show errors or output data to terminal.',
-                        callback=callback)(f)
+                     expose_value=False,
+                     help='Only show errors or output data to terminal.',
+                     callback=callback)(f)
 
 
 # Shared CLI option(s)
@@ -101,15 +101,14 @@ def force_run_option(f):
         return value
 
     return click.option('-r', '--force-run', is_flag=True, default=False,
-                        expose_value=False,
-                        help='Allow multiple copies of script to run at once.',
-                        callback=callback)(f)
+                     expose_value=False,
+                     help='Allow multiple copies of script to run at once.',
+                     callback=callback)(f)
 
 
 
 
 def common_options(f):
-    f = force_run_option(f)
     f = verbose_option(f)
     f = quiet_option(f)
     return f
@@ -121,13 +120,6 @@ def cli():
     pass
 
 
-SCOPES = ['https://www.googleapis.com/auth/gmail.readonly', 
-		  'https://mail.google.com/', 
-		  'https://www.googleapis.com/auth/gmail.modify']
-CLIENT_SECRET_FILE = '../../client_secret.json'
-APPLICATION_NAME = 'machinima-gmail-utility'
-
-
 def get_credentials():
     """Gets valid user credentials from storage.
 
@@ -135,96 +127,117 @@ def get_credentials():
     the OAuth2 flow is completed to obtain the new credentials.
 
     Returns:
-        Credentials, the obtained credential.
+    Credentials, the obtained credential.
     """
     home_dir = os.path.expanduser('~')
     credential_dir = os.path.join(home_dir, '.credentials')
     if not os.path.exists(credential_dir):
         os.makedirs(credential_dir)
-    credential_path = os.path.join(credential_dir,
-                                   settings.APPLICATION_NAME)
+    credential_path = os.path.join(credential_dir, settings.APPLICATION_NAME)
 
     store = Storage(credential_path)
     credentials = store.get()
     if not credentials or credentials.invalid:
-        log.warn("Invalid (or non-existent) OAuth credentials for this app."
-                 "Please authorize this app via the webrowser page that will"
-                 "popup now.")
+        log.warn("Invalid (or non-existent) OAuth credentials for this app.  "
+           "Please authorize this app via the webrowser page that will"
+           "popup now.")
         flow = client.flow_from_clientsecrets(settings.CLIENT_SECRET_FILE, settings.SCOPES)
-        flow.user_agent = APPLICATION_NAME
+        flow.user_agent = settings.APPLICATION_NAME
         credentials = tools.run_flow(flow, store, settings.FLAGS)
         log.warn('Storing credentials to {}'.format(credential_path))
-    return credentials
+    else:
+        log.info("Credentials: {} exist.  Delete file to "
+           "force reauthorization.".format(credential_path))
+        return credentials
+
+
+def get_service():
+    """Get GMail service object.
+    """
+
+    credentials = get_credentials()
+    http = credentials.authorize(httplib2.Http())
+    service = discovery.build('gmail', 'v1', http=http)
+
+    return service
+
 
 @cli.command("setup-oauth")
 def setup_oauth():
+    """Setup OAuth credential cache for app.  Will open a web browser to take
+    you through OAuth setup.  """
+
     get_credentials()
 
-# @cli.command("get-sub-properties")
-# @click.argument("property")
-# def get_sub_properties(property):
-#     """
-#     Get sub properties for a property
-#     """
-#     properties = [k for k in settings.PROPERTY_MAP.keys()]
-#     if property in properties:
-#         print('\n'.join([item for item in settings.PROPERTY_MAP[property]]))
-#     else:
-#         print('Property: "{}" not found.'.format(property))
-#         print('Current Properties: {}'.format(properties))
-# 
-# 
-# @cli.command("get")
-# @common_options
-# @pass_state
-# @click.argument("property")
-# @click.argument("sub-property")
-# @click.argument("start-time")
-# @click.argument("end-time")
-# @click.option('--format',
-#               type=click.Choice(['csv', 'tsv', 'json', 'text', 'clipboard']),
-#               default='text', help="output format")
-# @click.option('--delimiter', type=click.STRING,
-#               help='Field delimiter, defaults to tab delimited.', default='|')
-# @click.option('--output', type=click.STRING,
-#               help="path to output file, supports S3 uri as well.",
-#               default='-')
-# @click.option('--redshift-url', type=str, envvar='REDSHIFT_URL',
-#               help='Of the form redshift+psycopg2://...')
-# @click.option('--dry-run', is_flag=True, default=False,
-#               help='Do not insert records into database.')
-# @click.option('--batch', type=str, default=settings.BATCH_ID,
-#               help='Batch id saved to data file if --output specified.')
-# @click.option('--workers', type=int, default=settings.WORKERS,
-#               help='# of processes to run in parallel.')
-# @click.option('--tmpdir', type=str, help="Location of receiptlog files during processing.")
-# def get(state, format, delimiter, output, batch, redshift_url, property, sub_property,
-#         start_time, end_time, workers, tmpdir, dry_run):
-#     """Get object from somewhere and put it into the db """
-# 
-#     try:
-#         # outer try/except block, must wrap all function code to prevent leakage.
-# 
-#         tmpdir = '/tmp/' if not tmpdir else os.environ.get('TMPDIR') or tmpdir
-# 
-#         if not os.path.exists(tmpdir):
-#             log.warn("Temp directory: {} doesn't exist.  Set --tmpdir flag to a directory that exists".format(tmpdir))
-#             sys.exit(-1)
-# 
-#         log.warn("Temporary files will be written to: {}".format(tmpdir))
-# 
-#         try:
-#             # need to write this bit to process the object/data from ETL
-#             df = etl.get_object()
-#             etl.output_dataframe(df, format, delimiter, output, state.profile, batch)
-# 
-#         except Exception as e:
-#             log.exception(e)
-#             sys.exit(-1)
-# 
-#     except Exception as e:
-#         log.exception(e)
-#         sys.exit(-1)
+
+@cli.command("filter-email")
+@click.argument("user_id")
+@click.option("--query", type=str, default=settings.DEFAULT_QUERY,  help='Default filter parameters.')
+@click.option('--just-ids', is_flag=True, default=False, help='Only output msg ids')
+def filter_email(user_id, query, just_ids):
+    """Get list of message ids that meet filter criteria.
+    """
+
+    log.info("Query: {}".format(query))
+    service = get_service()
+    response = service.users().messages().list(userId=user_id,
+                                            q=query).execute()
+
+    log.warn("Response:")
+    if just_ids:
+        for id in [x['id'] for x in response['messages']]:
+            print(id)
+    else:
+        print(response)
+
+
+@cli.command("get-email")
+@click.argument("user-id")
+@click.argument("msg-id")
+def get_email(user_id, msg_id):
+    """Print out the body of an email.  Indicate if it has attachements.
+    """
+    try:
+        service = get_service()
+        response = service.users().messages().get(userId=user_id,
+                                            id=msg_id).execute()
+
+        log.warn("Response:")
+        print(json.dumps(response, indent=4, sort_keys=True))
+
+    except Exception as e:
+        log.exception(e)
+        sys.exit(-1)
+
+@cli.command("get-attachments")
+@click.argument("user-id")
+@click.argument("msg-id")
+@click.argument("store-dir")
+def get_attachments(user_id, msg_id, store_dir):
+    """Get and store attachment for message
+    """
+
+    try:
+        service = get_service()
+        response = service.users().messages().get(userId=user_id, id=msg_id).execute()
+        for part in response['payload']['parts']:
+            if part['filename']:
+                if 'data' in part['body']:
+                    data=part['body']['data']
+                else:
+                    att_id=part['body']['attachmentId']
+                    att=service.users().messages().attachments().get(userId=user_id, messageId=msg_id,id=att_id).execute()
+                    data=att['data']
+                    file_data = base64.urlsafe_b64decode(data.encode('UTF-8'))
+                    path = store_dir + part['filename']
+
+                with open(path, 'wb') as f:
+                    log.warn('Wrote: {}'.format(path))
+                    f.write(file_data)
+
+    except Exception as e:
+        log.exception(e)
+        sys.exit(-1)
 
 
 # Must be here for shell invocation to work
@@ -239,7 +252,7 @@ if '__main__' == __name__:
         # wait
         if os.environ.get('TIMEOUT'):
             log.warn("Timeout overridden.  Timeout: {} sec(s)."
-                     .format(os.environ.get('TIMEOUT')))
+            .format(os.environ.get('TIMEOUT')))
         else:
             log.info("Default timeout: {} sec(s).".format(settings.TIMEOUT))
 
@@ -249,8 +262,8 @@ if '__main__' == __name__:
         # still running?  possibly hung.  kill.
         if p.is_alive():
             log.error("Watchdog timer triggered: {} seconds.  Process "
-                      "appears to be hung.  Terminating process."
-                      .format(timeout))
+             "appears to be hung.  Terminating process."
+             .format(timeout))
             p.terminate()
             p.join()
             sys.exit(-1)

@@ -7,7 +7,7 @@ import sys
 import os
 import tempfile
 import logging
-from data_receipt_log_extract.util.log import setup_logging
+from machmail.util.log import setup_logging
 
 setup_logging()
 log = logging.getLogger('default')
