@@ -120,7 +120,7 @@ def cli():
     pass
 
 
-def get_credentials():
+def get_credentials(client_secrets_file=''):
     """Gets valid user credentials from storage.
 
     If nothing has been stored, or if the stored credentials are invalid,
@@ -141,7 +141,7 @@ def get_credentials():
         log.warn("Invalid (or non-existent) OAuth credentials for this app.  "
            "Please authorize this app via the webrowser page that will"
            "popup now.")
-        flow = client.flow_from_clientsecrets(settings.CLIENT_SECRET_FILE, settings.SCOPES)
+        flow = client.flow_from_clientsecrets(client_secrets_file, settings.SCOPES)
         flow.user_agent = settings.APPLICATION_NAME
         credentials = tools.run_flow(flow, store, settings.FLAGS)
         log.warn('Storing credentials to {}'.format(credential_path))
@@ -163,11 +163,12 @@ def get_service():
 
 
 @cli.command("setup-oauth")
-def setup_oauth():
+@click.argument("client-secrets-file")
+def setup_oauth(client_secrets_file):
     """Setup OAuth credential cache for app.  Will open a web browser to take
     you through OAuth setup.  """
 
-    get_credentials()
+    get_credentials(client_secrets_file)
 
 
 @cli.command("filter-email")
