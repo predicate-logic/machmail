@@ -41,7 +41,7 @@ On first run Googles OAuth setup must be configured.  You will need to run this 
 
 ```
 cd machmail/machmail
-python -m setup-oauth /path/to/client_secrets.json
+python -m machmail.cli setup-oauth /path/to/client_secrets.json
 <browser will open now>
 ```
 When the browser opens you will be asked to approve the `machmail` app scopes.  You must grant this requests or the script will not work.
