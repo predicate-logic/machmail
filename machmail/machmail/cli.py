@@ -25,7 +25,7 @@ from oauth2client.file import Storage
 from machmail import settings
 from machmail import __version__
 from machmail.util.log import setup_logging
-# from machmail.util.mutex import create_mutex_file
+from machmail.util.mutex import create_mutex_file
 
 
 setup_logging()
@@ -111,6 +111,7 @@ def force_run_option(f):
 def common_options(f):
     f = verbose_option(f)
     f = quiet_option(f)
+    f = force_run_option(f)
     return f
 
 
@@ -163,7 +164,6 @@ def get_service():
 
 
 @cli.command("setup-oauth")
-@click.argument("client-secrets-file")
 def setup_oauth(client_secrets_file):
     """Setup OAuth credential cache for app.  Will open a web browser to take
     you through OAuth setup.  """
@@ -172,23 +172,22 @@ def setup_oauth(client_secrets_file):
 
 
 @cli.command("filter-email")
-@click.argument("user_id")
+@common_options
 @click.option("--query", type=str, default=settings.DEFAULT_QUERY,  help='Default filter parameters.')
-@click.option('--just-ids', is_flag=True, default=False, help='Only output msg ids')
-def filter_email(user_id, query, just_ids):
+@click.option('--id-only', is_flag=True, default=False, help='Only output msg ids')
+def filter_email(query, id_only):
     """Get list of message ids that meet filter criteria.
     """
 
     log.info("Query: {}".format(query))
     service = get_service()
-    response = service.users().messages().list(userId=user_id,
-                                            q=query).execute()
+    response = service.users().messages().list(userId='me', q=query).execute()
 
     log.warn("Response:")
     if response['resultSizeEstimate'] == 0:
         log.warn("No results found.")
     else:
-        if just_ids:
+        if id_only:
             for id in [x['id'] for x in response['messages']]:
                 print(id)
         else:
@@ -196,26 +195,25 @@ def filter_email(user_id, query, just_ids):
 
 
 @cli.command("get-email")
-@click.argument("user-id")
+@common_options
 @click.argument("msg-id")
 @click.option('--mark-as-unread', is_flag=True, default=True, help="Mark email as unread.")
-def get_email(user_id, msg_id, mark_as_unread):
+def get_email(msg_id, mark_as_unread):
     """Print out the body of an email.  Indicate if it has attachements.
     """
     try:
         service = get_service()
-        response = service.users().messages().get(userId=user_id,
-                                            id=msg_id).execute()
+        response = service.users().messages().get(userId='me', id=msg_id).execute()
 
         log.warn("Response:")
         print(json.dumps(response, indent=4, sort_keys=True))
 
         if mark_as_unread:
             log.warn("Marking message: {} as read.".format(msg_id))
-            response = service.users().messages().modify(userId=user_id, id=msg_id, body={'removeLabelIds': ["UNREAD"]}).execute()
+            response = service.users().messages().modify(userId='me', id=msg_id, body={'removeLabelIds': ["UNREAD"]}).execute()
         else:
             log.warn("Marking message: {} as UNREAD.".format(msg_id))
-            response = service.users().messages().modify(userId=user_id, id=msg_id, body={'addLabelIds': ["UNREAD"]}).execute()
+            response = service.users().messages().modify(userId='me', id=msg_id, body={'addLabelIds': ["UNREAD"]}).execute()
             
     except Exception as e:
         log.exception(e)
@@ -223,24 +221,24 @@ def get_email(user_id, msg_id, mark_as_unread):
 
 
 @cli.command("get-attachments")
-@click.argument("user-id")
+@common_options
 @click.argument("msg-id")
 @click.argument("store-dir")
 @click.option('--mark-as-read', is_flag=True, default=True, help="Mark email as read if attachement is downloaded.")
-def get_attachments(user_id, msg_id, store_dir, mark_as_read):
+def get_attachments(msg_id, store_dir, mark_as_read):
     """Get and store attachment for message
     """
 
     try:
         service = get_service()
-        response = service.users().messages().get(userId=user_id, id=msg_id).execute()
+        response = service.users().messages().get(userId='me', id=msg_id).execute()
         for part in response['payload']['parts']:
             if part['filename']:
                 if 'data' in part['body']:
                     data=part['body']['data']
                 else:
                     att_id=part['body']['attachmentId']
-                    att=service.users().messages().attachments().get(userId=user_id, messageId=msg_id,id=att_id).execute()
+                    att=service.users().messages().attachments().get(userId='me', messageId=msg_id,id=att_id).execute()
                     data=att['data']
                     file_data = base64.urlsafe_b64decode(data.encode('UTF-8'))
                     path = store_dir + part['filename']
@@ -252,7 +250,7 @@ def get_attachments(user_id, msg_id, store_dir, mark_as_read):
         # mark message as read
         if mark_as_read:
             log.warn("Marking message: {} as read.".format(msg_id))
-            response = service.users().messages().modify(userId=user_id, id=msg_id, body={'removeLabelIds': ["UNREAD"]}).execute()
+            response = service.users().messages().modify(userId='me', id=msg_id, body={'removeLabelIds': ["UNREAD"]}).execute()
 
     except Exception as e:
         log.exception(e)
