@@ -31,7 +31,7 @@ python setup.py build && python setup.py install
 # test
 cd ~
 pyenv activate machmail
-${HOME}/.pyenv/versions/machmail/bin/machmail
+machmail
 ```
 
 Sucessful Output:
@@ -85,20 +85,26 @@ Once the `~/.credentials` directory is in place in the home directory of the use
 
 Google's tools use a query format that is detailed [here](https://support.google.com/mail/answer/7190?hl=en).  Using this syntax you can use the `machmail` utility to find emails (with attachements) of interest and then use the utility to download the attachements for a specific email to a path.
 
+
 ### Help
 In general you can get help on the `machmail` utility with:
 
 ```
-cd machmail/machmail
+machmail --help
+```
+
+NOTE: if the `machmail` tool is being run directly from the Github checkout directory you could also invoke it without installing it:
+```
+cd ~/build/machmail/machmail/
 python -m machmail.cli --help
 ```
 
-Going forward it assumed you are in the `machmail/machmail` sub-directory when you run `python -m machmail.cli`.
+For the rest of the documentation it is assumed that the `machmail` utility has been installed inside of a `pyenv` environment called `machmail` using the `python setup.py install` command from the `machmail/machmail` Github checkout directory.
 
 For specific `machmail` commands you can get help per command:
 
 ```
-python -m machmail.cli filter-email --help
+machmail filter-email --help
 ```
 -
 ### Filter Messages
@@ -109,8 +115,7 @@ For example:
    * Only output the message id's.
 
 ```
-cd machmail/machmail
-python -m machmail.cli filter-email --id-only \
+machmail filter-email --id-only \
 --query "from:foobar@gmail.com has:attachment newer_than:2d label:UNREAD"
 ```
 
@@ -131,7 +136,7 @@ For example:
 First find all of the `msg_id`s that match this query using `filter-email`:
 
 ```
-python -m machmail.cli filter-email --id-only \
+machmail filter-email --id-only \
 --query "from:foobar@gmail.com has:attachment newer_than:2d subject:Test Filter Text label:UNREAD"
 
 2018-02-19 17:46:58,281 WARNING Response:
@@ -142,7 +147,7 @@ Note the returned `msg_id: 161afe491f18b00c`.
 Now use this information to retrieve the messages attachement(s) and store them.
 
 ```
-python -m machmail.cli get-attachments 161afe491f18b00c /tmp/
+machmail get-attachments 161afe491f18b00c /tmp/
  
 2018-02-19 17:49:04,134 WARNING Wrote: /tmp/invoice_20180219.pdf
 2018-02-19 17:49:04,678 WARNING Wrote: /tmp/timecard_20180219.pdf
@@ -157,8 +162,8 @@ Looks like there were two attachements on this message.  They have now ben store
 You could perform both searches together if you would like:
 
 ```
-for msg_id in $(python -m machmail.cli filter-email --id-only --query "from:foobar@gmail.com has:attachment newer_than:2d subject:Test Filter Text label:UNREAD"); do 
-	python -m machmail.cli get-attachments $msg_id /tmp/; 
+for msg_id in $(machmail filter-email --id-only --query "from:foobar@gmail.com has:attachment newer_than:2d subject:Test Filter Text label:UNREAD"); do 
+	machmail get-attachments $msg_id /tmp/; 
 done
 
 ```
@@ -169,7 +174,7 @@ You can additionally examine the data for a particular email using this utility 
 **NOTE**: the example below also sets the email message back to `UNREAD`.  This could be useful to backfill email attachements that had been previously processed with `machmail` and marked as read.
 
 ```
-python -m machmail.cli get-email --mark-as-unread 161afe491f18b00c
+machmail get-email --mark-as-unread 161afe491f18b00c
 
 2018-02-19 17:56:10,951 WARNING Response:
 {
