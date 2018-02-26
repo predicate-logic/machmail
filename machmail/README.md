@@ -31,8 +31,29 @@ python setup.py build && python setup.py install
 # test
 cd ~
 pyenv activate machmail
-${HOME}/.pyenv/versions/machmail/bin/machmail --version
+${HOME}/.pyenv/versions/machmail/bin/machmail
+```
+
+Sucessful Output:
+
+```
+Usage: machmail [OPTIONS] COMMAND [ARGS]...
+
+Options:
+  --version  Show the version and exit.
+  --help     Show this message and exit.
+
+Commands:
+  filter-email     Get list of message ids that meet filter...
+  get-attachments  Get and store attachment for message
+  get-email        Print out the body of an email.
+  setup-oauth      Setup OAuth credential cache for app.
 ``` 
+**NOTE**: Although you could append `${HOME}/.pyenv/versions/machmail/bin/` to the `PATH` setup in `.bash_profile` and `.bashrc` for the user so you won't have to specify the full path to the `machmail` binary each time you wish to run it you should consider the following:  
+
+It will still be required to set the Python environment to `machmail` though before the binary can be run (e.g. `pyenv activate machmail`) as it needs access to it's dependencies.  
+
+Although it is possible to install the `machmail` utility into the system Python that Python would need to be 3.5+ and it is not considered "best practice" to install libraries into the system Python with a virtual environment such as `pyenv` provides.
 
 ### Setup Google OAuth 
 `machmail` requires OAuth configured.  Follow instructions at [Gmail API Quickstart](https://developers.google.com/gmail/api/quickstart/python) for the GMail account that will be accessed by `machmail`.
@@ -44,14 +65,16 @@ Save `client_secret.json` somewhere safe on the system.  Absolute path to this f
 On first run Googles OAuth setup must be configured.  You will need to run this code on a computer with a web-browser configured.  You will also need the fully-qualified path name to the `client_secret` file downloaded as part of the Google OAuth setup.
 
 ```
-cd machmail/machmail
-python -m machmail.cli setup-oauth /path/to/client_secrets.json
-<browser will open now>
+pyenv activate machmail
+export PATH="$PATH:${HOME}/.pyenv/versions/machmail/bin/"
+machmail setup-oauth /path/to/client_secrets.json
+<browser will open on a graphical shell if available>
 ```
 When the browser opens you will be asked to approve the `machmail` app scopes.  You must grant this requests or the script will not work.
 
+In the event that you are authorizing on a computer without a browser you can open a browser on your local computer and point it at the install URL that is printed out during the `machmail setup-oauth ...` process.
 
-Once you are complete a new directory (`~/.credentials`) will store the Google OAuth credentials required for access to this users GMail account.  If for some reason you need to re-authorize this account you can delete the `~/.credentials` directory and re-run the `setup-oauth` steps above.
+Once the app has been authorized a new directory (`~/.credentials`) will store the Google OAuth credentials required for access to this users GMail account.  If for some reason you need to re-authorize this account you can delete the `~/.credentials` directory and re-run the `setup-oauth` steps above.
 
 
 ## Usage
