@@ -21,7 +21,7 @@
         "file_handler": {
             "class": "machmail.util.multiprocessing_log.MultiProcessingLog",
             "formatter": "full",
-            "name": "../log/machmail.log",
+            "name": "/tmp/machmail.log",
             "maxsize": 20971520,
             "mode": "a",
             "rotate": 1,

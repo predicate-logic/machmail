@@ -14,21 +14,25 @@ pyenv install 3.6.4
 pyenv virtualenv 3.6.4 machmail
 ```
 
-### Checkout `machmail` Utility
-Checkout the `machmail` utility from GitHub and install the required Python libraries.  `machmail` is intended to run inside a `pyenv` Python environment.  
-```
-git clone https://github.com/predicate-logic/machmail
-cd machmail
-pip install -r machmail/requirements.txt
-```
+### Checkout and Build
+Checkout the `machmail` utility from GitHub and install the required Python libraries.  `machmail` is intended to run inside a `pyenv` Python environment. 
 
-Check that requirements were installed inside the `pyenv` for `machmail`. 
 ```
-pyenv local
-```
-This should show `machmail` as the current environment.  Running `ipython` from the command-line at this point should show you are running Python 3.6.4.  
+# login as user that will run machmail
 
-If it doesn't then try the setup again and note any errors the previous setup steps show (or call Mike).
+# checkout machmail
+cd ~/build
+git clone https://github.com/predicate-logic/machmail.git
+
+# install machmail
+cd ~/build/machmail/machmail
+python setup.py build && python setup.py install
+
+# test
+cd ~
+pyenv activate machmail
+${HOME}/.pyenv/versions/machmail/bin/machmail --version
+``` 
 
 ### Setup Google OAuth 
 `machmail` requires OAuth configured.  Follow instructions at [Gmail API Quickstart](https://developers.google.com/gmail/api/quickstart/python) for the GMail account that will be accessed by `machmail`.
@@ -48,6 +52,7 @@ When the browser opens you will be asked to approve the `machmail` app scopes.  
 
 
 Once you are complete a new directory (`~/.credentials`) will store the Google OAuth credentials required for access to this users GMail account.  If for some reason you need to re-authorize this account you can delete the `~/.credentials` directory and re-run the `setup-oauth` steps above.
+
 
 ## Usage
 
