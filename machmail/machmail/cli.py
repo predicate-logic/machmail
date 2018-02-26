@@ -121,7 +121,7 @@ def cli():
     pass
 
 
-def get_credentials(client_secrets_file, flags):
+def get_credentials(client_secrets_file='', flags=settings.flags):
     """Gets valid user credentials from storage.
 
     If nothing has been stored, or if the stored credentials are invalid,
