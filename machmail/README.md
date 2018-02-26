@@ -62,19 +62,23 @@ Save `client_secret.json` somewhere safe on the system.  Absolute path to this f
 
 
 ### Setup `machmail` OAuth
-On first run Googles OAuth setup must be configured.  You will need to run this code on a computer with a web-browser configured.  You will also need the fully-qualified path name to the `client_secret` file downloaded as part of the Google OAuth setup.
+On first run Googles OAuth setup must be configured.  You will need to run this code on a computer that has access to a web browser configured and has the `machmail` utility installed.  You will also need the fully-qualified path name to the `client_secret` file downloaded as part of the Google OAuth setup.
 
+Note: This OAuth procedure generates a `~/.credentials` directory that serves as the login credentials for the `machmail` tool.  If you need to authorize a computer, such as the etl01 server that doesn't have a GUI you could copy the `~/.credentials` directory to the users home directory that would need to use these credentials after going through the authorazition process on a computer that does have access to a web browser.
+
+
+#### OAuth Authorization
 ```
 pyenv activate machmail
-export PATH="$PATH:${HOME}/.pyenv/versions/machmail/bin/"
 machmail setup-oauth /path/to/client_secrets.json
 <browser will open on a graphical shell if available>
 ```
 When the browser opens you will be asked to approve the `machmail` app scopes.  You must grant this requests or the script will not work.
 
-In the event that you are authorizing on a computer without a browser you can open a browser on your local computer and point it at the install URL that is printed out during the `machmail setup-oauth ...` process.
 
 Once the app has been authorized a new directory (`~/.credentials`) will store the Google OAuth credentials required for access to this users GMail account.  If for some reason you need to re-authorize this account you can delete the `~/.credentials` directory and re-run the `setup-oauth` steps above.
+
+Once the `~/.credentials` directory is in place in the home directory of the user that will run `machmail` you can then use the tool.
 
 
 ## Usage
