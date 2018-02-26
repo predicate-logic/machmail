@@ -29,7 +29,7 @@ def get_version(dir, package_name):
 setup(name='machmail',
       # package metadata
       version=get_version(PACKAGE_DIR[''], 'machmail'),
-      description=('Mail scrapping utility.  Retrieve email attachements from '
+      description=('Mail scraping utility.  Retrieve email attachements from '
                    'GMail and store locally'),
       long_description=README,
       classifiers=[

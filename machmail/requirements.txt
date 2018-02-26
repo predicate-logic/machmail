@@ -1,3 +1,7 @@
 click
-google-api-python-client
+nose
+retry
+envoy
+pytz
 
+google-api-python-client
