@@ -40,6 +40,7 @@ python setup.py build && python setup.py install
 # test
 cd ~
 pyenv activate machmail
+hash -r
 machmail
 ```
 
