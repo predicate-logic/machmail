@@ -14,7 +14,6 @@ import logging
 import httplib2
 import multiprocessing
 
-
 # google related libs
 from apiclient import discovery
 from oauth2client import client
@@ -106,8 +105,6 @@ def force_run_option(f):
                      callback=callback)(f)
 
 
-
-
 def common_options(f):
     f = verbose_option(f)
     f = quiet_option(f)
@@ -121,7 +118,7 @@ def cli():
     pass
 
 
-def get_credentials(client_secrets_file='', flags=settings.FLAGS):
+def get_credentials(client_secrets_file=''):
     """Gets valid user credentials from storage.
 
     If nothing has been stored, or if the stored credentials are invalid,
@@ -141,14 +138,17 @@ def get_credentials(client_secrets_file='', flags=settings.FLAGS):
     if not credentials or credentials.invalid:
         log.warn("Invalid (or non-existent) OAuth credentials for this app.")
 
+        if os.path.isfile(client_secrets_file):
+            log.warn("Looks like file exists.")
+        log.warn("Attempting to load clients_secret file: {}".format(client_secrets_file))
         flow = client.flow_from_clientsecrets(client_secrets_file, settings.SCOPES)
         flow.user_agent = settings.APPLICATION_NAME
-
-        credentials = tools.run_flow(flow, store, flags)
+        credentials = tools.run_flow(flow, store, settings.FLAGS)
         log.warn('Storing credentials to {}'.format(credential_path))
     else:
-        log.info("Credentials: {} already exist.  Delete file to "
-           "force reauthorization.".format(credential_path))
+        log.warn("Credentials for this app: '{}' already exist.  Delete file: "
+                 "'{}' to force reauthorization.".format(settings.APPLICATION_NAME,
+                                                         credential_path))
         return credentials
 
 
@@ -166,19 +166,15 @@ def get_service():
 @cli.command("setup-oauth")
 @common_options
 @click.argument("client-secrets-file")
-@click.option("--noauth-local-webserver", is_flag=True, default=False,
-              help='Open OAuth on remote browser?')
-def setup_oauth(client_secrets_file, noauth_local_webserver):
-    """Setup OAuth credential cache for app.  Will open a web browser to take
-    you through OAuth setup.  """
+def setup_oauth(client_secrets_file):
+    """Setup OAuth credential cache for app.  MUST have access to a web-browser
+    for this to work.  
+    """
 
     if os.path.isfile(client_secrets_file):
-        # run oauth browser session locally or with remote access
-        flags = settings.FLAGS
-        flags.noauth_local_webserver = noauth_local_webserver
-        get_credentials(client_secrets_file, flags)
+        get_credentials(client_secrets_file)
     else:
-        log.exception("No secrets file found at: {}".format(client_secrets_file))
+        log.exception("No secrets file found at:{}".format(client_secrets_file))
 
 
 @cli.command("filter-email")

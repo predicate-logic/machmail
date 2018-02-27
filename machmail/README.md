@@ -2,7 +2,16 @@
 Python attachment client for Machinima 
 
 ## Setup
-On the system where you would like run/test the code.
+On the system where you would like run/test the code you will need to perform the following steps to install the `machmail` command-line script:
+   
+* Install Python 3.6.4.
+* Install `pyenv`.
+* Install a Python virtual environment called `machmail` for the user that will run the utility.
+* Checkout the `machmail` source from GitHub into `~/build/machmail`
+* Build and install the `machmail` utility with the `python setup.py install` command.
+* Setup Google OAuth credentials.
+* Setup `machmail` OAuth Credentials.
+   
 
 ### Install `pyenv`
 Follow instructions [here](https://github.com/pyenv/pyenv-installer)
@@ -55,30 +64,34 @@ It will still be required to set the Python environment to `machmail` though bef
 
 Although it is possible to install the `machmail` utility into the system Python that Python would need to be 3.5+ and it is not considered "best practice" to install libraries into the system Python with a virtual environment such as `pyenv` provides.
 
-### Setup Google OAuth 
+### Setup Google OAuth Credentials
 `machmail` requires OAuth configured.  Follow instructions at [Gmail API Quickstart](https://developers.google.com/gmail/api/quickstart/python) for the GMail account that will be accessed by `machmail`.
 
 Save `client_secret.json` somewhere safe on the system.  Absolute path to this file will be given as the during initial setup of utility.
 
 
-### Setup `machmail` OAuth
-On first run Googles OAuth setup must be configured.  You will need to run this code on a computer that has access to a web browser configured and has the `machmail` utility installed.  You will also need the fully-qualified path name to the `client_secret` file downloaded as part of the Google OAuth setup.
+### Setup `machmail` OAuth Credentials
+A seperate Python script: `machmail/oauth/generate_credentials.py` is used to generate the OAuth credentials for the `machmail` app.  This script will need access to the `client_secret.json` file (see LastPass) for this app.
 
-Note: This OAuth procedure generates a `~/.credentials` directory that serves as the login credentials for the `machmail` tool.  If you need to authorize a computer, such as the etl01 server that doesn't have a GUI you could copy the `~/.credentials` directory to the users home directory that would need to use these credentials after going through the authorazition process on a computer that does have access to a web browser.
+From the root of the `machmail` GitHub checkout directory you can find the script in `machmail/machmail/oauth/`
 
-
-#### OAuth Authorization
+Usage:
 ```
-pyenv activate machmail
-machmail setup-oauth /path/to/client_secrets.json
-<browser will open on a graphical shell if available>
+cd machmail/machmail/machmail
+cp /path/to/client_secret.json ./client_secret.json
+python generate_credentials.py
+<follow on screen instructions>
 ```
-When the browser opens you will be asked to approve the `machmail` app scopes.  You must grant this requests or the script will not work.
 
+Once the script launches it will print out a URL that you will need to access from a browser.  The local browser on your workstation will do.
+
+The script will also pause at a "Enter Verification code:" prompt.  After granting the necessary permissions via the browser a code will be printed out.  You will then need to copy and paste this code back into the prompt of the script.
+
+Once finished be sure to remove the `client_secret.json` file from this directory for security reasons.  
 
 Once the app has been authorized a new directory (`~/.credentials`) will store the Google OAuth credentials required for access to this users GMail account.  If for some reason you need to re-authorize this account you can delete the `~/.credentials` directory and re-run the `setup-oauth` steps above.
 
-Once the `~/.credentials` directory is in place in the home directory of the user that will run `machmail` you can then use the tool.
+Once the `~/.credentials` directory is in place in the home directory of the user that will run `machmail` you can then use the tool and you will not need to run the OAuth validation procedure again.
 
 
 ## Usage
@@ -94,19 +107,22 @@ machmail --help
 ```
 
 NOTE: if the `machmail` tool is being run directly from the Github checkout directory you could also invoke it without installing it:
+
 ```
 cd ~/build/machmail/machmail/
 python -m machmail.cli --help
 ```
 
-For the rest of the documentation it is assumed that the `machmail` utility has been installed inside of a `pyenv` environment called `machmail` using the `python setup.py install` command from the `machmail/machmail` Github checkout directory.
+For the rest of the documentation it is assumed that the `machmail` utility has been installed inside of a `pyenv` environment called `machmail` using the `python setup.py install` command.  See instructions above if you haven't peformed this step yet.
 
 For specific `machmail` commands you can get help per command:
 
 ```
 machmail filter-email --help
 ```
+
 -
+
 ### Filter Messages
 For example:
 
@@ -207,4 +223,5 @@ machmail get-email --mark-as-unread 161afe491f18b00c
    * [GMail API Docs](https://developers.google.com/apis-explorer/#p/gmail/v1/)
    * [GMail API Reference](https://developers.google.com/gmail/api/v1/reference/)
    * [GMail Search Syntax](https://support.google.com/mail/answer/7190?hl=en)
+   * [Gmail API Quickstart](https://developers.google.com/gmail/api/quickstart/python)
 
