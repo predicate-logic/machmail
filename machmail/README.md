@@ -19,7 +19,10 @@ Follow instructions [here](https://github.com/pyenv/pyenv-installer)
 
 ### Setup Python 3
 ```
+# Install Python 3.6.4 for current user
 pyenv install 3.6.4
+
+# Instantiate virtual environment
 pyenv virtualenv 3.6.4 machmail
 ```
 
@@ -30,17 +33,18 @@ Checkout the `machmail` utility from GitHub and install the required Python libr
 # login as user that will run machmail
 
 # checkout machmail
+mkdir ~/build
 cd ~/build
 git clone https://github.com/predicate-logic/machmail.git
 
 # install machmail
 cd ~/build/machmail/machmail
-python setup.py build && python setup.py install
+python setup.py install
 
 # test
 cd ~
 pyenv activate machmail
-hash -r
+pyenv rehash
 machmail
 ```
 
@@ -72,7 +76,9 @@ Save `client_secret.json` somewhere safe on the system.  Absolute path to this f
 
 
 ### Setup `machmail` OAuth Credentials
-A seperate Python script: `machmail/oauth/generate_credentials.py` is used to generate the OAuth credentials for the `machmail` app.  This script will need access to the `client_secret.json` file (see LastPass) for this app.
+Firstly you will need to copy the `client_secret.json` file onto the system you will be installed the tool on.  Check in LastPass for the current value of this token for this GMail user.
+
+A seperate Python script: `machmail/oauth/generate_credentials.py` is used to generate the OAuth credentials for the `machmail` app.  This script will need access to the `client_secret.json` file for this app.  
 
 From the root of the `machmail` GitHub checkout directory you can find the script in `machmail/machmail/oauth/`
 
