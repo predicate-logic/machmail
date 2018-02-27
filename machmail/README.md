@@ -129,7 +129,6 @@ machmail filter-email --help
 ```
 
 -
-
 ### Filter Messages
 For example:
 
